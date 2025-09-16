@@ -230,7 +230,6 @@ async function updatePost(event, postId) {
   }
 }
 
-// Register user
 // Fixed register user function with proper error positioning
 async function registerUser(event, baseUrl) {
   event.preventDefault();
@@ -446,50 +445,20 @@ async function loginUser(event, baseUrl) {
   }
 }
 
-// Fixed utility function for input errors with proper positioning
+// Fixed utility function for input errors - now shows as toast notifications
 function showInputError(inputElement, message) {
   inputElement.style.borderColor = '#dc3545';
   inputElement.style.backgroundColor = '#fff5f5';
   inputElement.title = message;
   
-  // Remove existing error message for this field
-  const existingError = inputElement.parentNode.querySelector('.field-error');
-  if (existingError) {
-    existingError.remove();
-  }
+  // Show error as toast notification instead of inline
+  showErrorMessage(message);
   
-  // Add error message properly positioned
-  const errorDiv = document.createElement('div');
-  errorDiv.className = 'field-error';
-  errorDiv.textContent = message;
-  errorDiv.style.cssText = `
-    color: #dc3545;
-    font-size: 12px;
-    margin-top: 4px;
-    margin-bottom: 8px;
-    display: block;
-    width: 100%;
-    text-align: left;
-    position: relative;
-    z-index: 1;
-  `;
-  
-  // Insert after the input element
-  if (inputElement.nextSibling) {
-    inputElement.parentNode.insertBefore(errorDiv, inputElement.nextSibling);
-  } else {
-    inputElement.parentNode.appendChild(errorDiv);
-  }
-  
-  // Clear error when user starts typing
+  // Clear error styling when user starts typing
   const clearError = () => {
     inputElement.style.borderColor = '';
     inputElement.style.backgroundColor = '';
     inputElement.title = '';
-    const errorEl = inputElement.parentNode.querySelector('.field-error');
-    if (errorEl) {
-      errorEl.remove();
-    }
     inputElement.removeEventListener('input', clearError);
     inputElement.removeEventListener('focus', clearError);
   };
@@ -501,7 +470,7 @@ function showInputError(inputElement, message) {
 // Function to clear all errors
 function clearAllErrors() {
   // Remove all error messages
-  const errorMessages = document.querySelectorAll('.field-error, .alert-message');
+  const errorMessages = document.querySelectorAll('.alert-message');
   errorMessages.forEach(msg => msg.remove());
   
   // Reset all input styling
@@ -524,32 +493,37 @@ function showErrorMessage(message) {
   alertDiv.style.cssText = `
     background-color: #f8d7da;
     color: #721c24;
-    padding: 12px 16px;
+    padding: 16px 20px;
     border: 1px solid #f5c6cb;
-    border-radius: 4px;
+    border-radius: 6px;
     margin: 10px 0;
     font-size: 14px;
+    line-height: 1.4;
     position: fixed;
-    top: 20px;
+    top: 80px;
     right: 20px;
-    max-width: 300px;
+    max-width: 350px;
+    min-width: 280px;
     z-index: 9999;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: slideIn 0.4s ease;
+    cursor: pointer;
   `;
   
   document.body.appendChild(alertDiv);
   
-  // Auto remove after 5 seconds
+  // Auto remove after 8 seconds (longer for errors)
   setTimeout(() => {
     if (alertDiv.parentNode) {
-      alertDiv.remove();
+      alertDiv.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => alertDiv.remove(), 300);
     }
-  }, 5000);
+  }, 8000);
   
   // Click to dismiss
   alertDiv.addEventListener('click', () => {
-    alertDiv.remove();
+    alertDiv.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => alertDiv.remove(), 300);
   });
 }
 
@@ -564,28 +538,38 @@ function showSuccessMessage(message) {
   alertDiv.style.cssText = `
     background-color: #d4edda;
     color: #155724;
-    padding: 12px 16px;
+    padding: 16px 20px;
     border: 1px solid #c3e6cb;
-    border-radius: 4px;
+    border-radius: 6px;
     margin: 10px 0;
     font-size: 14px;
+    line-height: 1.4;
     position: fixed;
-    top: 20px;
+    top: 80px;
     right: 20px;
-    max-width: 300px;
+    max-width: 350px;
+    min-width: 280px;
     z-index: 9999;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    animation: slideIn 0.4s ease;
+    cursor: pointer;
   `;
   
   document.body.appendChild(alertDiv);
   
-  // Auto remove after 3 seconds
+  // Auto remove after 4 seconds (shorter for success)
   setTimeout(() => {
     if (alertDiv.parentNode) {
-      alertDiv.remove();
+      alertDiv.style.animation = 'slideOut 0.3s ease';
+      setTimeout(() => alertDiv.remove(), 300);
     }
-  }, 3000);
+  }, 4000);
+  
+  // Click to dismiss
+  alertDiv.addEventListener('click', () => {
+    alertDiv.style.animation = 'slideOut 0.3s ease';
+    setTimeout(() => alertDiv.remove(), 300);
+  });
 }
 
 // Enhanced token handling for API calls
@@ -653,31 +637,49 @@ style.textContent = `
     }
   }
   
+  @keyframes slideOut {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(100%);
+    }
+  }
+  
   .alert-message {
     cursor: pointer;
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease;
     word-wrap: break-word;
+    border-left: 4px solid transparent;
   }
   
   .alert-message:hover {
     opacity: 0.9;
+    transform: translateX(-5px);
   }
   
-  .field-error {
-    animation: fadeIn 0.3s ease;
-    clear: both;
+  .alert-message.error-alert {
+    border-left-color: #dc3545;
   }
   
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  .alert-message.success-alert {
+    border-left-color: #28a745;
   }
   
-  /* Ensure form inputs have proper spacing for error messages */
+  /* Remove any form spacing that might cause shifts */
   #register-form input,
   #register-form select,
   #login-form input {
-    margin-bottom: 4px;
+    margin-bottom: 0;
+  }
+  
+  /* Ensure forms maintain consistent height */
+  #register-div,
+  #login-div {
+    min-height: auto;
+    position: relative;
   }
 `;
 document.head.appendChild(style);
