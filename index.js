@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const fs = require('fs');
 
+
 const https = require('https');
 
 const keepAlive = () => {
@@ -201,6 +202,14 @@ app.get('/post/:id', async (req, res) => {
   if (!post) {
     return res.status(404).send('Post not found');
   }
+
+   // Provide default timestamp if missing
+  const postTimestamp = post.timestamp || new Date().toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric', 
+    month: 'long',
+    day: 'numeric',
+  });
 
   // Read the HTML template from the file
   fs.readFile(path.join(__dirname, 'post-detail.html'), 'utf8', (err, data) => {
