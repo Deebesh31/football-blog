@@ -12,6 +12,26 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const fs = require('fs');
 
+const https = require('https');
+
+const keepAlive = () => {
+    const url = 'https://football-blog.onrender.com/health';
+    
+    https.get(url, (res) => {
+        console.log(`Keep-alive ping: ${res.statusCode} at ${new Date().toISOString()}`);
+    }).on('error', (err) => {
+        console.error('Keep-alive error:', err.message);
+    });
+};
+
+// Ping every 14 minutes (840000 ms)
+setInterval(keepAlive, 840000);
+
+// Initial ping
+keepAlive();
+
+console.log('Keep-alive service started. Pinging every 14 minutes.');
+
 const jwtSecret = process.env.JWT_SECRET;
 const app = express();
 const PORT = process.env.PORT || 5500;
