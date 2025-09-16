@@ -19,55 +19,73 @@
             <span class="nav__hamburger__line"></span>
             <span class="nav__hamburger__line"></span>
         </a>
-        <div class="nav__menu">
-            <div id="register-div">
-                <h1>Register</h1>
-                <form id="register-form">
-                    <input type="text" id="register-username" placeholder="Username"/>
-                    <input type="password" id="register-password" placeholder="Password"/>
-                    <select id="register-role">
-                        <option value="reader">Reader</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                    <button type="submit">Register</button>
-                </form>
-            </div>
-            <div id="logout-div">
-                <h2 id="username">Username</h2>
-                <button id="logout">Logout</button>
-            </div>
+       <div class="nav__menu">
+        <div>
+          <div id="register-div">
+            <h1>Register</h1>
+            <form id="register-form">
+              <input
+                type="text"
+                id="register-username"
+                placeholder="Username"
+              />
+              <input
+                type="password"
+                id="register-password"
+                placeholder="Password"
+              />
+              <select id="register-role">
+                <option value="reader">Reader</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button type="submit">Register</button>
+            </form>
+          </div>
+          <div id="logout-div">
+            <h2 id="username">Username</h2>
+            <button id="logout-button">Logout</button>
+          </div>
 
-            <div id="login-div">
-                <h1>Login</h1>
-                <form id="login-form">
-                    <input type="text" id="login-username" placeholder="Username"/>
-                    <input type="password" id="login-password" placeholder="Password"/>
-                </form>
-                <button id="login-button" type="submit">Login</button>
-            </div>
+          <div id="login-div">
+            <h1>Login</h1>
+            <form id="login-form">
+              <input type="text" id="login-username" placeholder="Username" />
+              <input
+                type="password"
+                id="login-password"
+                placeholder="Password"
+              />
+            </form>
+            <button id="login-button" type="submit">Login</button>
+          </div>
         </div>
+      </div>
     </nav>
     <main>
-       <img src="${post.imageUrl}" alt="detail-post-img">
-       <div class="post-content">
+      `
+      <img src="${post.imageUrl}" class="detail-post-img" />
+      <div class="post-content">
         <h1 class="post-title">${post.title}</h1>
         <div class="extra-info">
-            <p class="post-timestamp">${post.timetstamp}</p>
-            <p class="post-author">${post.author}</p>
+          <p class="post-timestamp">${post.timestamp}</p>
+          <p class="post-author">${post.author}</p>
         </div>
         <p>${post.content}</p>
-       </div>
+      </div>
     </main>
+    `
     <footer>
-        <h3>Goalpost Gazette</h3>
-        <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit.
-             Perferendis consequuntur repellat, labore quos quasi fugit
-              ea quo ex nihil eaque.
-        </p>
-        <span><p>&copy;</p></span>
+      <h3>Goalpost Gazette</h3>
+      <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ducimus illum
+        dolorum hic totam et perferendis? Nisi ipsum omnis dolor harum.
+      </p>
+      <span
+        ><p>&copy;</p>
         <script>
-        document.write(new Date().getFullYear());
-        </script>
+          document.write(new Date().getFullYear());
+        </script></span
+      >
     </footer>
-</body>
+  </body>
 </html>
