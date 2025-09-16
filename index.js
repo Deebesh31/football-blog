@@ -11,7 +11,6 @@ const path = require('path');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const fs = require('fs');
-const { timestamp, error } = require('console');
 
 const https = require('https');
 
@@ -61,11 +60,12 @@ connectDB().then(() => {
 const Post = mongoose.model(
     'Post',
     new mongoose.Schema({
-        title: String,
-        content: String,
-        imageUrl: String,
-        author: String,
-        timestamp: String,
+        title: { type: String, required: true },
+        content: { type: String, required: true },
+        imageUrl: { type: String, required: true },
+        author: { type: String, required: true },
+    }, {
+        timestamps: true  // Automatically adds createdAt and updatedAt fields
     })
 );
 
@@ -173,54 +173,72 @@ app.get('/posts', async (req, res) => {
 });
 
 app.post('/posts', authenticateJWT, async (req, res) => {
-  if (req.user.role === 'admin') {
-    const { title, content, imageUrl, author, timestamp } = req.body;
+    if (req.user.role === 'admin') {
+        try {
+            console.log('Received data:', req.body); // Debug log
+            
+            const { title, content, imageUrl, author } = req.body; // NO timestamp needed
 
-    const newPost = new Post({
-      title,
-      content,
-      imageUrl,
-      author,
-      timestamp,
-    });
+            const newPost = new Post({
+                title,
+                content,
+                imageUrl,
+                author,
+                // createdAt and updatedAt are automatic
+            });
 
-    newPost
-      .save()
-      .then((savedPost) => {
-        res.status(201).send(savedPost);
-      })
-      .catch((error) => {
-        res.status(500).send({ error: 'Internal Server Error' });
-      });
-  } else {
-    res.sendStatus(403);
-  }
+            const savedPost = await newPost.save();
+            console.log('Saved post:', savedPost); // Debug log
+            
+            res.status(201).send(savedPost);
+        } catch (error) {
+            console.error('Error creating post:', error);
+            res.status(500).send({ error: 'Internal Server Error' });
+        }
+    } else {
+        res.sendStatus(403);
+    }
 });
 
+
 app.get('/post/:id', async (req, res) => {
-  const postId = req.params.id;
-  const post = await Post.findById(postId);
-  if (!post) {
-    return res.status(404).send('Post not found');
-  }
+    try {
+        const postId = req.params.id;
+        const post = await Post.findById(postId);
+        
+        if (!post) {
+            return res.status(404).send('Post not found');
+        }
 
-  // Read the HTML template from the file
-  fs.readFile(path.join(__dirname, 'post-detail.html'), 'utf8', (err, data) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send('Internal Server Error');
+        // Read the HTML template
+        fs.readFile(path.join(__dirname, 'post-detail.html'), 'utf8', (err, data) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Internal Server Error');
+            }
+
+            // Format the date
+            const formattedDate = new Date(post.createdAt).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Replace placeholders
+            const postDetailHtml = data
+                .replace(/\${post.imageUrl}/g, post.imageUrl)
+                .replace(/\${post.title}/g, post.title)
+                .replace(/\${post.createdAt}/g, formattedDate) // Use createdAt
+                .replace(/\${post.author}/g, post.author)
+                .replace(/\${post.content}/g, post.content);
+
+            res.status(200).send(postDetailHtml);
+        });
+    } catch (error) {
+        console.error('Error fetching post:', error);
+        res.status(500).send('Internal Server Error');
     }
-
-    // Replace placeholders in th HTML with actual post data
-    const postDetailHtml = data
-      .replace(/\${post.imageUrl}/g, post.imageUrl)
-      .replace(/\${post.title}/g, post.title)
-      .replace(/\${post.timestamp}/g, post.timestamp)
-      .replace(/\${post.author}/g, post.author)
-      .replace(/\${post.content}/g, post.content);
-
-    res.status(200).send(postDetailHtml);
-  });
 });
 
 // Delete post
