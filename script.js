@@ -1,20 +1,5 @@
 // Client
 
-window.addEventListener('error', function(e) {
-    // Suppress extension-related errors
-    if (e.message && e.message.includes('message channel closed')) {
-        e.preventDefault();
-        return false;
-    }
-});
-
-window.addEventListener('unhandledrejection', function(e) {
-    if (e.reason && e.reason.message && e.reason.message.includes('message channel closed')) {
-        e.preventDefault();
-        return false;
-    }
-});
-
 // Get stored data
 let storedToken = localStorage.getItem('jwtToken');
 let storedUsername = localStorage.getItem('username');
@@ -63,103 +48,106 @@ window.addEventListener('load', () => {
 
 // Fetch posts
 async function fetchPosts(baseUrl) {
-    const res = await fetch(`${baseUrl}/posts`);
-    const data = await res.json();
-    const postsList = document.getElementById('posts-list');
-    const isAdmin = localStorage.getItem('userRole') === 'admin';
+  const res = await fetch(`${baseUrl}/posts`);
+  const data = await res.json();
+  const postsList = document.getElementById('posts-list');
+  const isAdmin = localStorage.getItem('userRole') === 'admin';
 
-    if (postsList) {
-        postsList.innerHTML = data
-            .map((post, index) => {
-                const deleteButtonStyle = isAdmin ? '' : 'display: none';
-                const updateButtonStyle = isAdmin ? '' : 'display: none';
-                
-                // Format the automatic createdAt timestamp
-                const formattedDate = new Date(post.createdAt).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
+  if (postsList) {
+    postsList.innerHTML = data
+      .map((post, index) => {
+        const deleteButtonStyle = isAdmin ? '' : 'display: none';
+        const updateButtonStyle = isAdmin ? '' : 'display: none';
 
-                return `
-            <div id="${post._id}" class="post">
-                <img src="${post.imageUrl}" alt="Image" />
-                <div class="post-title">
-                    ${
-                        index === 0
-                            ? `<h1><a href="/post/${post._id}">${post.title}</a></h1>`
-                            : `<h3><a href="/post/${post._id}">${post.title}</a></h3>`
-                    }
-                </div>
-                ${
-                    index === 0
-                        ? `<span><p>${post.author}</p><p>${formattedDate}</p></span>`
-                        : ''
-                }
-                <div id="admin-buttons">
-                    <button class="btn" style="${deleteButtonStyle}" onclick="deletePost('${post._id}', '${baseUrl}')">Delete</button>
-                    <button class="btn" style="${updateButtonStyle}" onclick="showUpdateForm('${post._id}', '${post.title}', '${post.content}')">Update</button>
-                </div>
-                ${index === 0 ? '<hr>' : ''}
-                ${index === 0 ? '<h2>All Articles</h2>' : ''}
-            </div>
-            `;
-            })
-            .join('');
-    }
+        return `
+      <div id="${post._id}" class="post">
+          <img src="${post.imageUrl}" alt="Image" />
+          <div class="post-title">
+            ${
+              index === 0
+                ? `<h1><a href="/post/${post._id}">${post.title}</a></h1>`
+                : `<h3><a href="/post/${post._id}">${post.title}</a></h3>`
+            }
+          </div>
+          ${
+            index === 0
+              ? `<span><p>${post.author}</p><p>${post.timestamp}</p></span>`
+              : ''
+          }
+          <div id="admin-buttons">
+            <button class="btn" style="${deleteButtonStyle}" onclick="deletePost('${
+          post._id
+        }', '${baseUrl}')">Delete</button>
+            <button class="btn" style="${updateButtonStyle}" onclick="showUpdateForm('${
+          post._id
+        }', '${post.title}', '${post.content}')">Update</button>
+          </div>
+          ${index === 0 ? '<hr>' : ''}
+          ${index === 0 ? '<h2>All Articles</h2>' : ''}
+        </div>
+      `;
+      })
+      .join('');
+  }
 }
 
 async function createPost(event, baseUrl) {
-    event.preventDefault();
-    const titleInput = document.getElementById('title');
-    const contentInput = document.getElementById('content');
-    const imageUrlInput = document.getElementById('image-url');
+  event.preventDefault();
+  const titleInput = document.getElementById('title');
+  const contentInput = document.getElementById('content');
+  const imageUrlInput = document.getElementById('image-url');
 
-    const title = titleInput.value;
-    const content = contentInput.value;
-    const imageUrl = imageUrlInput.value;
+  // Get the values from the input fields
+  const title = titleInput.value;
+  const content = contentInput.value;
+  const imageUrl = imageUrlInput.value;
 
-    if (!title || !content || !imageUrl) {
-        alert('Please fill in all fields.');
-        return;
+  // Ensure that inputs are not empty
+  if (!title || !content || !imageUrl) {
+    alert('Please fill in all fields 1.');
+    return;
+  }
+
+  const newPost = {
+    title,
+    content,
+    imageUrl,
+    author: storedUsername,
+    timestamp: new Date().toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+  };
+
+  const headers = new Headers({
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${storedToken}`,
+  });
+  const requestOptions = {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify(newPost),
+  };
+
+  try {
+    const response = await fetch(`${baseUrl}/posts`, requestOptions);
+    if (!response.ok) {
+      const storedRole = localStorage.getItem('userRole');
+      console.error(`Error creating the post: HTTP Status ${response.status}`);
+    } else {
+      // Clear the input data
+      titleInput.value = '';
+      contentInput.value = '';
+      imageUrlInput.value = '';
+      alert('Create post successful!');
     }
-
-    const newPost = {
-        title,
-        content,
-        imageUrl,
-        author: storedUsername,
-        // REMOVED: timestamp - it's now automatic
-    };
-
-    const headers = new Headers({
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${storedToken}`,
-    });
-    
-    const requestOptions = {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(newPost),
-    };
-
-    try {
-        const response = await fetch(`${baseUrl}/posts`, requestOptions);
-        if (!response.ok) {
-            console.error(`Error creating the post: HTTP Status ${response.status}`);
-            alert('Create post failed.');
-        } else {
-            titleInput.value = '';
-            contentInput.value = '';
-            imageUrlInput.value = '';
-            alert('Create post successful!');
-            fetchPosts(baseUrl); // Refresh the posts
-        }
-    } catch (error) {
-        console.error('An error occurred during the fetch:', error);
-        alert('Create post failed.');
-    }
+  } catch (error) {
+    console.error('An errro occured during the fetch:', error);
+    alert('Create post failed.');
+  }
+  fetchPosts(baseUrl);
 }
 
 // Delete Post
