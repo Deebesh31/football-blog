@@ -161,10 +161,15 @@ main {
   text-align: center;
 }
 
+
 .post-title h1 a,
 .post-title h3 a {
   color: black;
   text-decoration: none;
+}
+
+.post-title:hover {
+  text-decoration: underline; 
 }
 
 #posts-list {
