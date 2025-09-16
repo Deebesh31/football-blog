@@ -231,6 +231,7 @@ async function updatePost(event, postId) {
 }
 
 // Register user
+// Fixed register user function with proper error positioning
 async function registerUser(event, baseUrl) {
   event.preventDefault();
   
@@ -242,11 +243,8 @@ async function registerUser(event, baseUrl) {
   const password = passwordInput.value;
   const role = roleInput.value;
 
-  // Clear previous error styling
-  [usernameInput, passwordInput, roleInput].forEach(input => {
-    input.style.borderColor = '';
-    input.style.backgroundColor = '';
-  });
+  // Clear previous error styling and messages
+  clearAllErrors();
 
   // Enhanced client-side validation
   let hasError = false;
@@ -340,8 +338,7 @@ async function registerUser(event, baseUrl) {
   }
 }
 
-
-// Loging user
+// Fixed login user function with proper username handling
 async function loginUser(event, baseUrl) {
   event.preventDefault();
   
@@ -350,11 +347,8 @@ async function loginUser(event, baseUrl) {
   const username = usernameInput.value.trim();
   const password = passwordInput.value;
 
-  // Clear previous error styling
-  [usernameInput, passwordInput].forEach(input => {
-    input.style.borderColor = '';
-    input.style.backgroundColor = '';
-  });
+  // Clear previous error styling and messages
+  clearAllErrors();
 
   // Enhanced client-side validation
   let hasError = false;
@@ -400,11 +394,14 @@ async function loginUser(event, baseUrl) {
     submitButton.textContent = originalText;
 
     if (data.success) {
+      // Store user data properly
       localStorage.setItem('jwtToken', data.token);
       localStorage.setItem('userRole', data.role);
-      localStorage.setItem('username', data.username);
+      localStorage.setItem('username', data.username || username); // Fallback to input username
 
-      showSuccessMessage(`Welcome back, ${data.username}!`);
+      // Show welcome message with proper username
+      const displayName = data.username || username;
+      showSuccessMessage(`Welcome back, ${displayName}!`);
 
       // Close the hamburger menu if open
       const hamburger = document.querySelector('.nav__hamburger');
@@ -449,19 +446,19 @@ async function loginUser(event, baseUrl) {
   }
 }
 
-// Utility functions for better error handling and user feedback
+// Fixed utility function for input errors with proper positioning
 function showInputError(inputElement, message) {
   inputElement.style.borderColor = '#dc3545';
   inputElement.style.backgroundColor = '#fff5f5';
   inputElement.title = message;
   
-  // Remove existing error message
+  // Remove existing error message for this field
   const existingError = inputElement.parentNode.querySelector('.field-error');
   if (existingError) {
     existingError.remove();
   }
   
-  // Add error message
+  // Add error message properly positioned
   const errorDiv = document.createElement('div');
   errorDiv.className = 'field-error';
   errorDiv.textContent = message;
@@ -469,10 +466,20 @@ function showInputError(inputElement, message) {
     color: #dc3545;
     font-size: 12px;
     margin-top: 4px;
+    margin-bottom: 8px;
     display: block;
+    width: 100%;
+    text-align: left;
+    position: relative;
+    z-index: 1;
   `;
   
-  inputElement.parentNode.appendChild(errorDiv);
+  // Insert after the input element
+  if (inputElement.nextSibling) {
+    inputElement.parentNode.insertBefore(errorDiv, inputElement.nextSibling);
+  } else {
+    inputElement.parentNode.appendChild(errorDiv);
+  }
   
   // Clear error when user starts typing
   const clearError = () => {
@@ -484,9 +491,26 @@ function showInputError(inputElement, message) {
       errorEl.remove();
     }
     inputElement.removeEventListener('input', clearError);
+    inputElement.removeEventListener('focus', clearError);
   };
   
   inputElement.addEventListener('input', clearError);
+  inputElement.addEventListener('focus', clearError);
+}
+
+// Function to clear all errors
+function clearAllErrors() {
+  // Remove all error messages
+  const errorMessages = document.querySelectorAll('.field-error, .alert-message');
+  errorMessages.forEach(msg => msg.remove());
+  
+  // Reset all input styling
+  const inputs = document.querySelectorAll('#register-form input, #register-form select, #login-form input');
+  inputs.forEach(input => {
+    input.style.borderColor = '';
+    input.style.backgroundColor = '';
+    input.title = '';
+  });
 }
 
 function showErrorMessage(message) {
@@ -509,7 +533,7 @@ function showErrorMessage(message) {
     top: 20px;
     right: 20px;
     max-width: 300px;
-    z-index: 1000;
+    z-index: 9999;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     animation: slideIn 0.3s ease;
   `;
@@ -549,7 +573,7 @@ function showSuccessMessage(message) {
     top: 20px;
     right: 20px;
     max-width: 300px;
-    z-index: 1000;
+    z-index: 9999;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     animation: slideIn 0.3s ease;
   `;
@@ -605,7 +629,17 @@ async function authenticatedFetch(url, options = {}) {
   }
 }
 
-// Add CSS animation for alerts
+// Fix username display on page load
+document.addEventListener('DOMContentLoaded', () => {
+  const storedUsername = localStorage.getItem('username');
+  const usernameElement = document.getElementById('username');
+  
+  if (usernameElement && storedUsername) {
+    usernameElement.textContent = storedUsername;
+  }
+});
+
+// Add improved CSS
 const style = document.createElement('style');
 style.textContent = `
   @keyframes slideIn {
@@ -622,6 +656,7 @@ style.textContent = `
   .alert-message {
     cursor: pointer;
     transition: opacity 0.3s ease;
+    word-wrap: break-word;
   }
   
   .alert-message:hover {
@@ -630,11 +665,19 @@ style.textContent = `
   
   .field-error {
     animation: fadeIn 0.3s ease;
+    clear: both;
   }
   
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
+  }
+  
+  /* Ensure form inputs have proper spacing for error messages */
+  #register-form input,
+  #register-form select,
+  #login-form input {
+    margin-bottom: 4px;
   }
 `;
 document.head.appendChild(style);
