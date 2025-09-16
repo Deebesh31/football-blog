@@ -1,5 +1,20 @@
 // Client
 
+window.addEventListener('error', function(e) {
+    // Suppress extension-related errors
+    if (e.message && e.message.includes('message channel closed')) {
+        e.preventDefault();
+        return false;
+    }
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+    if (e.reason && e.reason.message && e.reason.message.includes('message channel closed')) {
+        e.preventDefault();
+        return false;
+    }
+});
+
 // Get stored data
 let storedToken = localStorage.getItem('jwtToken');
 let storedUsername = localStorage.getItem('username');
