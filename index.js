@@ -49,7 +49,7 @@ const Post = mongoose.model(
 );
 
 const User = mongoose.model(
-    'Post',
+    'User',
     new mongoose.Schema({
         username: String,
         password: String,
