@@ -64,7 +64,7 @@ const Post = mongoose.model(
         content: String,
         imageUrl: String,
         author: String,
-        timeStamp: String,
+        timestamp: String,
     })
 );
 
