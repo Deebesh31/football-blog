@@ -80,10 +80,10 @@ const User = mongoose.model(
 // Middleware
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // JWT Authentication Middleware
@@ -212,7 +212,7 @@ app.get('/post/:id', async (req, res) => {
   });
 
   // Read the HTML template from the file
-  fs.readFile(path.join(__dirname, 'post-detail.html'), 'utf8', (err, data) => {
+  fs.readFile(path.join(__dirname, 'public', 'post-detail.html'), 'utf8', (err, data) => {
     if (err) {
       console.error(err);
       return res.status(500).send('Internal Server Error');
